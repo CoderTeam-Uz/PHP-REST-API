@@ -6,11 +6,12 @@ include_once  "NotImplementedException.php";
 abstract class Api
 {
     private $method = ''; //GET|POST|PUT|DELETE
+    protected $query = "";
     protected $data = "";
 
     private static $encrypt_method = "AES-256-CBC";
     private static $secret_key = 'your secret key';
-    private static $secret_iv = 'your secred iv';
+    private static $secret_iv = 'your secret key';
     /**
      * @var PDO
      */
@@ -18,7 +19,7 @@ abstract class Api
 
     protected static function required($field, $field_name) {
         if (!isset($field)) {
-            throw new InvalidArgumentException('"' . $field_name . '" required!!!', 500);
+            throw new InvalidArgumentException('"' . $field_name . '" required!!!', 404);
         }
     }
 
@@ -36,11 +37,12 @@ abstract class Api
         return openssl_decrypt(base64_decode($uid), self::$encrypt_method, $key, 0, $iv);
     }
 
-    public function __construct($data) {
+    public function __construct($data, $query) {
         header("Access-Control-Allow-Orgin: *");
         header("Access-Control-Allow-Methods: *");
         header("Content-Type: application/json");
         $this->data = $data;
+        $this->query = $query;
         $this->method = $_SERVER['REQUEST_METHOD'];
         $this->conn = Database::connect();
     }
@@ -51,7 +53,7 @@ abstract class Api
         if (method_exists($this, $action)) {
             return $this->{$action}();
         } else {
-            throw new RuntimeException('Invalid Method', 500);
+            throw new RuntimeException('Invalid Method', 405);
         }
     }
 
